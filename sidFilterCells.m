@@ -86,7 +86,6 @@ while ~handles.stop
     % get the axis handle, and plot the intensities
     axes(handles.intFig);
     cla; hold on
-    xData = rand([nSpots 1]);
     for iChan = 1:nChans
       % plot full dataset
       kInts = ints{iChan}(idxs~=iImg);
@@ -99,7 +98,7 @@ while ~handles.stop
       xData = xData/2 + iChan;
       scatter(xData,rInts,10,'o','MarkerEdgeColor',[1 0 0]);
     end
-    set(handles.intFig,'FontSize',8,'XTick',1:nChans);
+    set(handles.intFig,'FontSize',8,'XTick',1:nChans);%,'YTick',[]);
     ylabel('raw intensity'); xlabel('channel');
     
     % Complete waitbar
@@ -264,6 +263,7 @@ function [allInts, allIdxs] = getIntensities(jobs,chans)
   % set up empty vectors
   allInts = repmat({[]},1,nChans);
   allIdxs = [];
+  maxVal = nan(1,4);
   
   % loop over jobs, then channels
   for iJob = 1:nJobs
@@ -291,7 +291,13 @@ function [allInts, allIdxs] = getIntensities(jobs,chans)
     allIdxs = [allIdxs; idxs];
     
   end
-    
+  
+  % force intensities across channels to be over range [-Inf 1]
+  for iChan = 1:nChans
+    maxVal = nanmax(allInts{iChan});
+    allInts{iChan} = allInts{iChan}/maxVal;
+  end
+  
 end
 
 

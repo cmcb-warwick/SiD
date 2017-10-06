@@ -8,10 +8,10 @@ end
 switch mode
   case 1
     % Sid version.
-    version = '1.0.3';
+    version = '1.1.0';
   case 2
     % Jobset structure version.
-    version = 1;
+    version = 2;
   otherwise
     error('Unknown version mode');
 end

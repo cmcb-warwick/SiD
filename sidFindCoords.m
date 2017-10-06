@@ -34,9 +34,14 @@ end
 localMaxima = struct('cands',[],'candsAmp',[],'candsBg',[]);
 
 % Find candidate spots.
-sidLog('Detecting particle candidates using unimodal histogram threshold');
-spots = histcutSpots(img,options,job.dataStruct{channel}.dataProperties);
-nSpots = size(spots,1);
+switch options.detectMode
+    case 'histcut'
+        sidLog('Detecting particle candidates using unimodal histogram threshold');
+        spots = histcutSpots(img,options,job.dataStruct{channel}.dataProperties);
+        nSpots = size(spots,1);
+    otherwise
+        error('Detection mode not yet implemented into Sid: %s',options.detectMode);
+end
 
 % Round spots to nearest pixel and limit to image bounds.
 if nSpots > 1
@@ -75,7 +80,12 @@ sidLog('Number of particles detected: %.1f',nSpots);
 
 if nSpots > 0
   % Refine spot candidates.
-  job = sidMixtureModel(job,img,localMaxima,channel);
+  switch options.refineMode
+      case 'mmf'
+          job = sidMixtureModel(job,img,localMaxima,channel);
+      otherwise
+          error('Refinement mode not yet incorporated into Sid: %s',options.refineMode);
+  end
 else
   % mark as failed, and give empty initCoord  
   dataStruct = job.dataStruct{channel};

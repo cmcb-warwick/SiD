@@ -15,6 +15,10 @@ job.movieDirectory = [];
 job.movieFiles = [];
 job.ROI = [];
 
+% Detection and refinement modes.
+opts.detectMode = 'histcut';
+opts.refineMode = 'mmf';
+
 % Channel options.
 opts.detectChan = 1;
 opts.measureChans = [1 0 0 0];
@@ -32,6 +36,8 @@ opts.mmfMaxTime = 300; % Maximum per-frame time (s) to attempt mixture model fit
 opts.maskRadius = 0.3; % um
 opts.gaussFilterSpots = 0; % whether or not to Gauss-filter before intensity measurement.
 
+% Output file grouping status.
+opts.groupOutput = 0; % whether or not to group siddetection files into a separate folder.
 
 % Debug options.
 debug.showMmfClusters = 0; % visualize clustering from overlapping PSFs, -1

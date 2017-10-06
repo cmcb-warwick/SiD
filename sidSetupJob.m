@@ -100,7 +100,7 @@ function hs = createControls()
 
   %% Options column.
   
-  % Start first column.
+  % Start second column.
   x = colw(1)+dx;
   w = colw(2)-2*dx;
   y = toplabely-lh;
@@ -196,8 +196,11 @@ function hs = createControls()
   t = label(hs.fig,'Filename',[x y labw h],medfont);
   t.FontWeight = 'bold';
   y = y-h; labw = 15;
-  label(hs.fig,['sidjobset_' datestr(now,'yymmdd') '_'],[x+ddx y labw h],smallfont);
+  hs.filenameTxt = label(hs.fig,['sidjobset_' datestr(now,'yymmdd') '_'],[x+ddx y labw h],smallfont);
   hs.filename = editbox(hs.fig,'filename',[x+(labw+ddx) y w-(labw+ddx) h]);
+  y = y-h;
+  tickw = w;
+  hs.groupOutput = checkbox(hs.fig,'Group output files into separate folder',[x y tickw h],[],tinyfont);
   y = y-lh;
   btnw = w/2; btnx = x+w/4; btnh = 2;
   hs.validateMetadata = button(hs.fig,'Validate metadata',[btnx y btnw btnh],@validateCB);
@@ -243,14 +246,18 @@ function updateControls(jobset)
   % fill filename information
   if isfield(jobset,'filename')
     [~,file] = fileparts(jobset.filename);
+    hs.filenameTxt.String(11:16) = file(11:16);
+    file = regexprep(file,'sidjobset_\d*_','');
     hs.filename.String = file;
   end
+  
+  % check siddetection grouping option
+  hs.groupOutput.Value = opts.groupOutput;
   
   % check if metadata previously validated
   if isfield(jobset,'metadata') && jobset.metadata{1}.validated
     hs.validateMetadata.String = 'Re-validate...';
-  end
-      
+  end 
 
   populateMovieBox();
   populateROIBox();
@@ -433,7 +440,21 @@ function validateCB(hObj,event)
   else
     % loop over each movie
     for iMov = 1:length(jobset.ROI)
+        
+      % Turn off the GUI during processing.
+      guiObj=findobj(handles.fig,'Enable','on');
+      set(guiObj,'Enable','inactive');
+  
       [jobset,applyAll] = sidValidateMetadata(jobset,iMov);
+      
+      % Re-activate GUI.
+      set(guiObj,'Enable','on');
+      
+      % check whether or not validation was cancelled
+      if isfield(jobset,'cancel') && jobset.cancel
+          jobset = rmfield(jobset,'cancel');
+          return
+      end
       % skip showing remaining movies, just save metadata for all
       if applyAll
         for jMov = iMov+1:length(jobset.ROI)
@@ -501,7 +522,7 @@ function updateJobset()
   
   jobset.movieDirectory = hs.movieDirectory.String;
   jobset.movieFiles = hs.movies.String;
-  filename = ['sidjobset_' datestr(now,'yymmdd') '_' hs.filename.String '.mat'];
+  filename = [hs.filenameTxt.String hs.filename.String '.mat'];
   jobset.filename = fullfile(jobset.movieDirectory,filename);
 
   opts = jobset.options;
@@ -513,6 +534,7 @@ function updateJobset()
   opts.maxSpots = str2double(hs.maxSpots.String);
   opts.mmfSensitivity = str2double(hs.alphaA.String);
   opts.maskRadius = str2double(hs.maskRadius.String)/1000;
+  opts.groupOutput = hs.groupOutput.Value;
   jobset.options = opts;
   
 end
